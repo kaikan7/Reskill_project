@@ -25,16 +25,30 @@
 
    Scenario_3 [R단 ] : 모터 후진 구동 & LED RED ON & Ultra sonic Sensor 작동
 
+[Test]
+P단시 모터 정지 안함(버그)
+N단시 모터 정지 안함(버그)
+
+
 
 3) Ultra sonic Sensor : R단 구동 중 장애물 거리에 따른 Buzzer 및 RGB LED 제어
  
    Scenario_1 [장애물 > 30cm ] : 모터 후진 구동 & LED RED ON 
-
-   Scenario_2 [30cm > 장애물 > 20cm ] : LED RED ON & RGB LED RED ON (어두움)
-  
-   Scenario_3 [20cm > 장애물  > 10cm ] : LED RED ON & RGB LED RED ON (중간) & Buzzer low tone  & 모터 회전속도 ↓
-  
+--> [Test]진입 OK
+     [Test]Scenario_2 [30cm > 장애물 > 20cm ] : LED RED ON & RGB LED RED ON (어두움) & Buzzer low tone
+--> [Test]진입 OK
+--> [Test]부저 미동작 중 R단 해제 시 정상적으로 원복됨
+   Scenario_3 [20cm > 장애물  > 10cm ] : LED RED ON & RGB LED RED ON (중간) & Buzzer mid tone  & 모터 회전속도 ↓
+--> [Test]진입 OK
+--> [Test]부저 미동작 중 R단 해제 시 정상적으로 원복됨
    Scenario_4 [10cm > 장애물 ] : LED RED ON & RGB LED RED ON (밝음) & Buzzer high tone & 모터 정지
+--> [Test]진입 OK
+--> [Test]부저 미동작 중 R단 해제 시 정상적으로 원복됨
+
+[Test]
+R단에서 부저 동작 중 N단, D단으로 변경하면 부저 계속 동작함(버그)
+
+
 
 
 [Task] 
