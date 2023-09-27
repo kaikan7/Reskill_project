@@ -28,6 +28,8 @@
 #include "IfxCpu.h"
 #include "IfxScuWdt.h"
 #include <stdio.h>
+
+
 #define PORT00_BASE     (0xF003A000)
 #define PORT00_OMR      (*(volatile unsigned int*)(PORT00_BASE + 0x04))
 #define PORT00_IOCR4    (*(volatile unsigned int*)(PORT00_BASE + 0x14))
@@ -49,7 +51,6 @@
 #define P4              4
 #define P6              6
 #define P7              7
-#define PC0             3
 #define PC1             11
 #define PC2             19
 #define PC3             27
@@ -72,6 +73,10 @@
 #define PCL6            22
 #define PCL7            23
 
+#define P0                  0
+#define PC0                 3
+#define PS0                 0
+#define PCL0                16
 
 void init_LED(void)
 {
@@ -213,6 +218,7 @@ void init_ERU(void)
 #define T12RS               1
 #define T12RES              2
 
+#define PWM_FREQ        6250000
 
 volatile uint32 range;
 volatile uint8 range_valid_flag = 0;
@@ -374,9 +380,11 @@ void ERU0_ISR(void)
 #define GTM_TOM0_TGC0_ENDIS_CTRL      (*(volatile unsigned int*)(GTM_BASE + 0x08070))
 #define GTM_TOM0_TGC0_OUTEN_CTRL      (*(volatile unsigned int*)(GTM_BASE + 0x08078))
 #define GTM_TOM0_TGC0_FUPD_CTRL       (*(volatile unsigned int*)(GTM_BASE + 0x08038))
+
 #define GTM_TOM0_CH1_CTRL             (*(volatile unsigned int*)(GTM_BASE + 0x08040))
 #define GTM_TOM0_CH1_SR0              (*(volatile unsigned int*)(GTM_BASE + 0x08044))
 #define GTM_TOM0_CH1_SR1              (*(volatile unsigned int*)(GTM_BASE + 0x08048))
+
 #define GTM_TOM0_CH2_CTRL             (*(volatile unsigned int*)(GTM_BASE + 0x08080))
 #define GTM_TOM0_CH2_SR0              (*(volatile unsigned int*)(GTM_BASE + 0x08084))
 #define GTM_TOM0_CH2_SR1              (*(volatile unsigned int*)(GTM_BASE + 0x08088))
@@ -394,6 +402,12 @@ void ERU0_ISR(void)
 #define GTM_TOM0_CH11_CTRL            (*(volatile unsigned int*)(GTM_BASE + 0x082C0))
 #define GTM_TOM0_CH11_SR0             (*(volatile unsigned int*)(GTM_BASE + 0x082C4))
 #define GTM_TOM0_CH11_SR1             (*(volatile unsigned int*)(GTM_BASE + 0x082C8))
+//FOR MOTOR
+#define GTM_TOM0_CH9_CTRL            (*(volatile unsigned int*)(GTM_BASE + 0x082C0))
+#define GTM_TOM0_CH9_SR0             (*(volatile unsigned int*)(GTM_BASE + 0x082C4))
+#define GTM_TOM0_CH9_SR1             (*(volatile unsigned int*)(GTM_BASE + 0x082C8))
+
+
 
 #define CLK_SRC_SR          12
 #define SL                  11
@@ -672,6 +686,11 @@ int core0_main(void)
 
         if(adcresult >= 3000)
         {
+          //* 버그 수정 위한 추가 *//
+          GTM_TOM0_CH11_SR1 = 0;
+          GTM_TOM0_CH15_SR1 = 0;
+          //* 버그 수정 위한 추가 *//
+
           PORT10_OMR |= ((0x01) << PS3);
           PORT10_OMR |= ((0x01) << PCL5);
           PORT10_OMR |= ((0x01) << PCL1);
@@ -679,6 +698,11 @@ int core0_main(void)
 
         else if(adcresult >= 1500)
         {
+          //* 버그 수정 위한 추가 *//
+          GTM_TOM0_CH11_SR1 = 0;
+          GTM_TOM0_CH15_SR1 = 0;
+          //* 버그 수정 위한 추가 *//
+
           PORT10_OMR |= ((0x01) << PS5);
           PORT10_OMR |= ((0x01) << PCL3);
           PORT10_OMR |= ((0x01) << PCL1);
@@ -686,6 +710,7 @@ int core0_main(void)
 
         else
         {
+
           PORT10_OMR |= ((0x01) << PS1);
           PORT10_OMR |= ((0x01) << PCL5);
 
@@ -740,6 +765,11 @@ void ERU1_ISR(void)
     CCU60_IEN ^= (1<< ENT12PM); // CCU60 disable
 
     PORT10_OMR |= ((1<<PCL2)|(1<<PS2)); // LED BLUE TOGGLE
+
+    //* 버그 수정 위한 추가 *//
+    GTM_TOM0_CH11_SR1 = 0;
+    GTM_TOM0_CH15_SR1 = 0;
+    //* 버그 수정 위한 추가 *//
 
     PORT02_IOCR0 ^= ((0x11) << PC3); // BUZZER TOGGLE
     PORT02_IOCR4 ^= ((0x11) << PC7); // RGB LED RED TOGGLE
