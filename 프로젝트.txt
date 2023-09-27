@@ -1,0 +1,49 @@
+[제목] Potentiometer 와 초음파 센서를 활용한 구동 및 충돌 방지 시스템
+
+
+[H/W 구성] 
+1) 센서 구성 : Switch / Ultra Sonic sensor / Poteniometer
+2) 작동 H/W : LED / RGB LED / BUZZER / MOTOR
+
+
+[S/W 구성]
+1) 필요 함수 : ISR (Swtich) / ADC (Potentiometer) / Timer ISR  (초음파 센서) / PWM (모터 구동, RGB LED RED, BUZZER)   
+2) 함수 구조 : 
+   - main 함수 : ADC triger for 모터 구동 & RGB LED 제어 > Ultra Sonic Trigger for 모터 & RGB LED RED & BUZZER PWM duty   
+   - Interrupt 함수 : Switch 입력에 따른 All fuction toggle (enable | disable toggle)
+
+
+[동작 시나리오]
+1) Switch : P 단 구현 (All fuction stop) 및 LED Blue On / TOGGLE 조건
+
+
+2) Potentiometer : D단 / N단 / R단 에 따른 모터 구동 및 전후 방향 제어
+
+   Scenario_1 [D단 ] : 모터 전진 구동 & RGB LED BLUE ON 
+
+   Scenario_2 [N단 ] : 모터 정지 & RGB LED GREEN ON 
+
+   Scenario_3 [R단 ] : 모터 후진 구동 & LED RED ON & Ultra sonic Sensor 작동
+
+
+3) Ultra sonic Sensor : R단 구동 중 장애물 거리에 따른 Buzzer 및 RGB LED 제어
+ 
+   Scenario_1 [장애물 > 30cm ] : 모터 후진 구동 & LED RED ON 
+
+   Scenario_2 [30cm > 장애물 > 20cm ] : LED RED ON & RGB LED RED ON (어두움)
+  
+   Scenario_3 [20cm > 장애물  > 10cm ] : LED RED ON & RGB LED RED ON (중간) & Buzzer low tone  & 모터 회전속도 ↓
+  
+   Scenario_4 [10cm > 장애물 ] : LED RED ON & RGB LED RED ON (밝음) & Buzzer high tone & 모터 정지
+
+
+[Task] 
+
+1) 모터 구동 함수 
+
+2) BUZZER 구동 함수 ()
+
+3) 초음파 센서 작동 함수 
+
+
+  
