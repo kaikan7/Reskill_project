@@ -28,6 +28,8 @@
 #include "IfxCpu.h"
 #include "IfxScuWdt.h"
 #include <stdio.h>
+
+
 #define PORT00_BASE     (0xF003A000)
 #define PORT00_OMR      (*(volatile unsigned int*)(PORT00_BASE + 0x04))
 #define PORT00_IOCR4    (*(volatile unsigned int*)(PORT00_BASE + 0x14))
@@ -49,7 +51,6 @@
 #define P4              4
 #define P6              6
 #define P7              7
-#define PC0             3
 #define PC1             11
 #define PC2             19
 #define PC3             27
@@ -58,32 +59,41 @@
 #define PC6             19
 #define PC7             27
 #define PS1             1
+#define PS2             2
 #define PS3             3
 #define PS4             4
 #define PS5             5
 #define PS6             6
 #define PS7             7
-#define PCL1             17
+#define PCL1            17
+#define PCL2            18
 #define PCL3            19
 #define PCL4            20
 #define PCL5            21
 #define PCL6            22
 #define PCL7            23
 
+#define P0                  0
+#define PC0                 3
+#define PS0                 0
+#define PCL0                16
 
 void init_LED(void)
 {
     // reset Port IOCR register
-    PORT02_IOCR4 &= ~((0x1F) << PC7);
-    PORT10_IOCR4 &= ~((0x1F) << PC5);
-    PORT10_IOCR0 &= ~((0x1F) << PC3);
-    PORT10_IOCR0 &= ~((0X1F) << PC1);
+    PORT02_IOCR4 &= ~((0x1F) << PC7); //RGB LED RED
+    PORT10_IOCR4 &= ~((0x1F) << PC5); //RGB LED GREEN
+    PORT10_IOCR0 &= ~((0x1F) << PC3); //RGB LED BLUE
+    PORT10_IOCR0 &= ~((0X1F) << PC1); // LED RED
+    PORT10_IOCR0 &= ~((0X1F) << PC2); // LED BLUE
 
     // set Port as general purpose output (push-pull)
     PORT02_IOCR4 |= 0x11 << PC7;
     PORT10_IOCR4 |= 0x10 << PC5;
     PORT10_IOCR0 |= 0x10 << PC3;
     PORT10_IOCR0 |= 0X10 << PC1;
+    PORT10_IOCR0 |= 0X10 << PC2;
+
 }
 
 void init_Switch(void)
@@ -93,12 +103,15 @@ void init_Switch(void)
 
 }
 
+
+
 // SCU Registers
 #define SCU_BASE            (0xF0036000)
 #define SCU_WDT_CPU0CON0    (*(volatile unsigned int*)(SCU_BASE + 0x100))
 #define SCU_EICR0           (*(volatile unsigned int*)(SCU_BASE + 0x210))
 #define SCU_EICR1           (*(volatile unsigned int*)(SCU_BASE + 0x214))
 #define SCU_IGCR0           (*(volatile unsigned int*)(SCU_BASE + 0x22C))
+#define SCU_EICR2           (*(volatile unsigned int*)(SCU_BASE + 0x218))
 
 #define EXIS0               4
 #define FEN0                8
@@ -126,6 +139,8 @@ void init_Switch(void)
 #define TOS                 11
 #define SRE                 10
 #define SRPN                0
+
+
 
 void init_ERU(void)
 {
@@ -204,6 +219,8 @@ void init_ERU(void)
 #define T12RS               1
 #define T12RES              2
 
+#define PWM_FREQ        6250000
+
 volatile uint32 range;
 volatile uint8 range_valid_flag = 0;
 
@@ -217,7 +234,6 @@ void init_USonic(void)
 
     PORT02_OMR |= ((0x01) << PCL6);
 }
-
 
 void init_CCU60(void)
 {
@@ -278,7 +294,6 @@ void usonicTrigger(void)
     CCU60_TCTR4 = 0x1 << T12RS;         // T12 start counting
 }
 
-
 __interrupt(0x0B) __vector_table(0)
 void CCU60_T12_ISR(void)
 {
@@ -286,8 +301,6 @@ void CCU60_T12_ISR(void)
     // GPIO P02.6 --> LOW
     PORT02_OMR |= ((0x01) << PCL6);
 }
-
-
 
 void init_CCU61(void)
 {
@@ -364,35 +377,108 @@ void ERU0_ISR(void)
 #define FXCLK_SEL           0
 
 //GTM TOM0
+#define GTM_TOM0_TGC0_GLB_CTRL        (*(volatile unsigned int*)(GTM_BASE + 0x08030))
+#define GTM_TOM0_TGC0_ENDIS_CTRL      (*(volatile unsigned int*)(GTM_BASE + 0x08070))
+#define GTM_TOM0_TGC0_OUTEN_CTRL      (*(volatile unsigned int*)(GTM_BASE + 0x08078))
+#define GTM_TOM0_TGC0_FUPD_CTRL       (*(volatile unsigned int*)(GTM_BASE + 0x08038))
 
-#define GTM_TOM0_TGC1_GLB_CTRL     (*(volatile unsigned int*)(GTM_BASE + 0x08230))
-#define GTM_TOM0_TGC1_ENDIS_CTRL   (*(volatile unsigned int*)(GTM_BASE + 0x08270))
-#define GTM_TOM0_TGC1_OUTEN_CTRL   (*(volatile unsigned int*)(GTM_BASE + 0x08278))
-#define GTM_TOM0_TGC1_FUPD_CTRL    (*(volatile unsigned int*)(GTM_BASE + 0x08238))
+#define GTM_TOM0_CH1_CTRL             (*(volatile unsigned int*)(GTM_BASE + 0x08040))
+#define GTM_TOM0_CH1_SR0              (*(volatile unsigned int*)(GTM_BASE + 0x08044))
+#define GTM_TOM0_CH1_SR1              (*(volatile unsigned int*)(GTM_BASE + 0x08048))
 
-#define GTM_TOM0_CH15_CTRL          (*(volatile unsigned int*)(GTM_BASE + 0x083C0))
-#define GTM_TOM0_CH15_SR0           (*(volatile unsigned int*)(GTM_BASE + 0x083C4))
-#define GTM_TOM0_CH15_SR1           (*(volatile unsigned int*)(GTM_BASE + 0x083C8))
+#define GTM_TOM0_CH2_CTRL             (*(volatile unsigned int*)(GTM_BASE + 0x08080))
+#define GTM_TOM0_CH2_SR0              (*(volatile unsigned int*)(GTM_BASE + 0x08084))
+#define GTM_TOM0_CH2_SR1              (*(volatile unsigned int*)(GTM_BASE + 0x08088))
 
-#define CLK_SRC_SR         12
-#define SL                 11
+#define GTM_TOM0_TGC1_GLB_CTRL        (*(volatile unsigned int*)(GTM_BASE + 0x08230))
+#define GTM_TOM0_TGC1_ENDIS_CTRL      (*(volatile unsigned int*)(GTM_BASE + 0x08270))
+#define GTM_TOM0_TGC1_OUTEN_CTRL      (*(volatile unsigned int*)(GTM_BASE + 0x08278))
+#define GTM_TOM0_TGC1_FUPD_CTRL       (*(volatile unsigned int*)(GTM_BASE + 0x08238))
+
+//FOR RGB LED RED
+#define GTM_TOM0_CH15_CTRL            (*(volatile unsigned int*)(GTM_BASE + 0x083C0))
+#define GTM_TOM0_CH15_SR0             (*(volatile unsigned int*)(GTM_BASE + 0x083C4))
+#define GTM_TOM0_CH15_SR1             (*(volatile unsigned int*)(GTM_BASE + 0x083C8))
+//FOR BUZZER
+#define GTM_TOM0_CH11_CTRL            (*(volatile unsigned int*)(GTM_BASE + 0x082C0))
+#define GTM_TOM0_CH11_SR0             (*(volatile unsigned int*)(GTM_BASE + 0x082C4))
+#define GTM_TOM0_CH11_SR1             (*(volatile unsigned int*)(GTM_BASE + 0x082C8))
+//FOR MOTOR
+#define GTM_TOM0_CH9_CTRL           (*(volatile unsigned int*)(GTM_BASE + 0x08240))
+#define GTM_TOM0_CH9_SR0            (*(volatile unsigned int*)(GTM_BASE + 0x08244))
+#define GTM_TOM0_CH9_SR1            (*(volatile unsigned int*)(GTM_BASE + 0x08248))
+
+
+
+#define CLK_SRC_SR          12
+#define SL                  11
 #define HOST_TRIG           0
-#define UPEN_CTRL15         30
-#define ENDIS_CTRL15        14
-#define OUTEN_CTRL15        14
+
+#define UPEN_CTRL1          18
+#define UPEN_CTRL2          20
+#define UPEN_CTRL3          22
+#define UPEN_CTRL7          30
+
+#define ENDIS_CTRL1         2
+#define ENDIS_CTRL2         4
+#define ENDIS_CTRL3         6
+#define ENDIS_CTRL7         14
+
+#define OUTEN_CTRL1         2
+#define OUTEN_CTRL2         4
+#define OUTEN_CTRL3         6
+#define OUTEN_CTRL7         14
+
+#define RSTCN0_CH1          18
+#define RSTCN0_CH2          20
+#define RSTCN0_CH3          22
 #define RSTCN0_CH15         30
-#define FUPD_CTRL15         14
+
+#define FUPD_CTRL1          2
+#define FUPD_CTRL2          4
+#define FUPD_CTRL3          6
+#define FUPD_CTRL7          14
 
 //GTM
 #define GTM_CLC            (*(volatile unsigned int*)(GTM_BASE + 0x9FD00))
 #define GTM_TOUTSEL6       (*(volatile unsigned int*)(GTM_BASE + 0x9FD48))
 #define GTM_TOUTSEL1       (*(volatile unsigned int*)(GTM_BASE + 0x9FD34))
+#define GTM_TOUTSEL0       (*(volatile unsigned int*)(GTM_BASE + 0x9FD30))
 
 #define DISS               1
 #define DISR               0
+#define SEL3               6
 #define SEL7               14
 #define SEL8               16
+#define SEL1               2
 #define SEL11              22
+
+
+#define UPEN_CTRL1          18
+#define UPEN_CTRL2          20
+#define UPEN_CTRL3          22
+#define HOST_TRIG           0
+#define ENDIS_CTRL1         2
+#define ENDIS_CTRL2         4
+#define ENDIS_CTRL3         6
+#define OUTEN_CTRL1         2
+#define OUTEN_CTRL2         4
+#define OUTEN_CTRL3         6
+#define RSTCN0_CH1          18
+#define RSTCN0_CH2          20
+#define RSTCN0_CH3          22
+#define FUPD_CTRL1          2
+#define FUPD_CTRL2          4
+#define FUPD_CTRL3          6
+#define CLK_SRC_SR          12
+#define SL                  11
+
+void init_Buzzer(void)
+{
+    PORT02_IOCR0 &= ~((0x1F) << PC3);           // PORT02.3 : Alternate output function 1 (push-pull)
+    PORT02_IOCR0 |= ((0x11) << PC3);            // PORT02.3 : GTM_TOUT3
+}
+
 
 void init_GTM_TOM0_PWM(void)
 {
@@ -422,18 +508,19 @@ void init_GTM_TOM0_PWM(void)
       GTM_CMU_CLK_EN &= ~((0x3) << EN_FXCLK);
       GTM_CMU_CLK_EN |=   ((0x2) << EN_FXCLK);
 
-      GTM_TOM0_TGC1_GLB_CTRL &= ~((0x3) << UPEN_CTRL15);
-      GTM_TOM0_TGC1_GLB_CTRL |=   ((0x2) << UPEN_CTRL15);
+      /* TOM0 채널15 for RGB LED RED */
+      GTM_TOM0_TGC1_GLB_CTRL &= ~((0x3) << UPEN_CTRL7);
+      GTM_TOM0_TGC1_GLB_CTRL |=   ((0x2) << UPEN_CTRL7);
 
-      GTM_TOM0_TGC1_FUPD_CTRL &= ~((0x3) << FUPD_CTRL15);
-      GTM_TOM0_TGC1_FUPD_CTRL |=   ((0x2) << FUPD_CTRL15);
+      GTM_TOM0_TGC1_FUPD_CTRL &= ~((0x3) << FUPD_CTRL7);
+      GTM_TOM0_TGC1_FUPD_CTRL |=   ((0x2) << FUPD_CTRL7);
       GTM_TOM0_TGC1_FUPD_CTRL &= ~((0x3) << RSTCN0_CH15);
       GTM_TOM0_TGC1_FUPD_CTRL |=   ((0x2) << RSTCN0_CH15);
 
-      GTM_TOM0_TGC1_ENDIS_CTRL &= ~((0x3) << ENDIS_CTRL15);
-      GTM_TOM0_TGC1_ENDIS_CTRL |=   ((0x2) << ENDIS_CTRL15);
-      GTM_TOM0_TGC1_OUTEN_CTRL &= ~((0x3) << OUTEN_CTRL15);
-      GTM_TOM0_TGC1_OUTEN_CTRL |=   ((0x2) << OUTEN_CTRL15);
+      GTM_TOM0_TGC1_ENDIS_CTRL &= ~((0x3) << ENDIS_CTRL7);
+      GTM_TOM0_TGC1_ENDIS_CTRL |=   ((0x2) << ENDIS_CTRL7);
+      GTM_TOM0_TGC1_OUTEN_CTRL &= ~((0x3) << OUTEN_CTRL7);
+      GTM_TOM0_TGC1_OUTEN_CTRL |=   ((0x2) << OUTEN_CTRL7);
 
       GTM_TOM0_CH15_CTRL |=  (1 << SL);
       GTM_TOM0_CH15_CTRL &= ~((0x7) << CLK_SRC_SR);
@@ -441,13 +528,159 @@ void init_GTM_TOM0_PWM(void)
       GTM_TOM0_CH15_SR0 = 12500 - 1;
       GTM_TOM0_CH15_SR1 = 0;
 
-      GTM_TOUTSEL1 &= ~((0x3) << SEL7);
-      GTM_TOM0_TGC1_GLB_CTRL |= (1 << HOST_TRIG);
+      GTM_TOUTSEL1 &= ~((0x3) << SEL7); // TOUT7 TOM0 CH15
+
+      /*TMO 채널11 for buzzer*/
+      GTM_TOM0_TGC1_GLB_CTRL &= ~((0x3) << UPEN_CTRL3);   // TOM0 channel 11 enable update of
+      GTM_TOM0_TGC1_GLB_CTRL |= ((0x2) << UPEN_CTRL3);    // register CM0, CM1, CLK_SRC
+
+      GTM_TOM0_TGC1_FUPD_CTRL &= ~((0x3) << FUPD_CTRL3);  // Enable force update of TOM0 channel 11
+      GTM_TOM0_TGC1_FUPD_CTRL |= ((0x2) << FUPD_CTRL3);
+      GTM_TOM0_TGC1_FUPD_CTRL &= ~((0x3) << RSTCN0_CH3);  // Reset CN0 of TOM0 channel 11 on force update
+      GTM_TOM0_TGC1_FUPD_CTRL |= ((0x2) << RSTCN0_CH3);
+
+      GTM_TOM0_TGC1_ENDIS_CTRL &= ~((0x3) << ENDIS_CTRL3); // Enable channel 11 on an update trigger
+      GTM_TOM0_TGC1_ENDIS_CTRL |= ((0x2) << ENDIS_CTRL3);
+      GTM_TOM0_TGC1_OUTEN_CTRL &= ~((0x3) << OUTEN_CTRL3); // Enable channel 11 output on an update trigger
+      GTM_TOM0_TGC1_OUTEN_CTRL |= ((0x2) << OUTEN_CTRL3);
+
+      GTM_TOM0_CH11_CTRL |= (1 << SL);                    // High signal level for duty cycle
+      GTM_TOM0_CH11_CTRL &= ~((0x7) << CLK_SRC_SR);       // Clock source : CMU_FXCLK(1) = 6250 kHz
+      GTM_TOM0_CH11_CTRL |= (1 << CLK_SRC_SR);
+      GTM_TOM0_CH11_SR0 = 12500 - 1;                      // PWM freq. = 6250 kHz / 12500 = 500 Hz
+      GTM_TOM0_CH11_SR1 = 0;                              // Duty cycle = 0
+
+      GTM_TOUTSEL0 &= ~((0x3) << SEL3);                   // TOUT3 : TOM0 channel 11
+
+
+
+      GTM_TOM0_TGC1_GLB_CTRL |= ((0x02) << UPEN_CTRL1);
+         GTM_TOM0_TGC1_ENDIS_CTRL |= ((0x02) << ENDIS_CTRL1);
+         GTM_TOM0_TGC1_OUTEN_CTRL |= ((0x02) << OUTEN_CTRL1);
+
+         GTM_TOM0_CH9_CTRL |= ((0x01) << SL);
+         GTM_TOM0_CH9_CTRL |= ((0x01) << CLK_SRC_SR);
+
+         GTM_TOM0_CH9_SR0 = 12500 - 1;
+         GTM_TOM0_CH9_SR1 = 0;
+         GTM_TOUTSEL0 &= ~((0x03) << SEL1);
+
+
+      GTM_TOM0_TGC1_GLB_CTRL |= (1 << HOST_TRIG);         // Trigger request signal to update
+
+}
+
+void initMotor(void)
+{
+    PORT10_IOCR0 &= ~(0x1F << PC1);
+    PORT02_IOCR0 &= ~(0x1F << PC1);
+   PORT02_IOCR4 &= ~(0x1F << PC7);
+
+    PORT10_IOCR0 |= (0x10 << PC1);  // Set D12 to OUTPUT (DIRA)
+    PORT02_IOCR0 |= (0x11 << PC1);  // Set D3 to PWM OUTPUT (PWMA)
+    PORT02_IOCR4 |= (0x10 << PC7);  // Set D9 to OUTPUT (BRAKE_A)
+}
+
+//  VADC Register
+#define VADC_BASE         (0xF0020000)
+#define VADC_CLC          (*(volatile unsigned int*)(VADC_BASE + 0x000))
+#define VADC_GBLOCFG      (*(volatile unsigned int*)(VADC_BASE + 0x080))
+#define VADC_G4ARBCFG     (*(volatile unsigned int*)(VADC_BASE + 0x1480))
+#define VADC_G4ARBPR      (*(volatile unsigned int*)(VADC_BASE + 0x1484))
+#define VADC_G4ICLASS0    (*(volatile unsigned int*)(VADC_BASE + 0x14A0))
+#define VADC_G4QMR0       (*(volatile unsigned int*)(VADC_BASE + 0x1504))
+#define VADC_G4QINR0      (*(volatile unsigned int*)(VADC_BASE + 0x1510))
+#define VADC_G4CHCTR7     (*(volatile unsigned int*)(VADC_BASE + 0x161C))
+#define VADC_G4RES1       (*(volatile unsigned int*)(VADC_BASE + 0x1704))
+
+#define DISS              1
+#define DISR              0
+#define ANONC             0
+#define ASEN0             24
+#define CSM0              3
+#define PRIO0             0
+#define CMS               8
+#define STCS              0
+#define FLUSH             10
+#define TREV              9
+#define ENGT              0
+#define RF                5
+#define REQCHNR           0
+#define RESPOS            21
+#define RESREG            16
+#define ICLSEL            0
+#define VF                31
+#define RESULT            0
+
+
+void init_VADC(void)
+{
+    /* Passwaord Access to unlock WDTSCON0 */
+    SCU_WDT_CPU0CON0 = ((SCU_WDT_CPU0CON0 ^ 0xFC) &~ (1 << LCK)) | (1 << ENDINIT);
+    while ((SCU_WDT_CPU0CON0 & (1 << LCK))!=0);
+
+    // Modify Access to clear ENDINIT bit
+    SCU_WDT_CPU0CON0 = ((SCU_WDT_CPU0CON0 ^ 0xFC) | (1 << LCK)) & ~ (1 << ENDINIT);
+    while ((SCU_WDT_CPU0CON0 & (1 << LCK))==0);
+
+    VADC_CLC &= ~(1<<DISR);
+
+    /* Passwaord Access to unlock WDTSCON0 */
+    SCU_WDT_CPU0CON0 = ((SCU_WDT_CPU0CON0 ^ 0xFC) &~ (1 << LCK)) | (1 << ENDINIT);
+    while ((SCU_WDT_CPU0CON0 & (1 << LCK))!=0);
+
+    // Modify Access to clear ENDINIT bit
+    SCU_WDT_CPU0CON0 = ((SCU_WDT_CPU0CON0 ^ 0xFC) | (1 << LCK)) | (1 << ENDINIT);
+    while ((SCU_WDT_CPU0CON0 & (1 << LCK))==0);
+
+    while ((VADC_CLC & (1<< DISS)) != 0);
+
+    VADC_G4ARBPR  |=   ((0x3) << PRIO0);
+    VADC_G4ARBPR  &= ~ (1     << CSM0);
+    VADC_G4ARBPR  |=   (1     << ASEN0);
+
+    VADC_G4QMR0   &= ~ ((0x3) << ENGT);
+    VADC_G4QMR0   |=   ((0x1) << ENGT);
+
+    VADC_G4QMR0   |=   (1     << FLUSH);
+
+    VADC_G4ARBCFG |=   ((0x3) << ANONC);
+
+    VADC_G4ICLASS0&= ~ ((0x7) << CMS);
+
+    // VADC Group 4 Channel 7 Setting
+    VADC_G4CHCTR7 |=   (1     << RESPOS);
+    VADC_G4CHCTR7 &= ~ ((0xF) << RESREG);
+    VADC_G4CHCTR7 |=   (1     << RESREG);
+    VADC_G4CHCTR7 &= ~ ((0x3) << ICLSEL);
+}
+
+void VADC_startConversion(void)
+{
+    VADC_G4QINR0 &= ~(0x1F);
+    VADC_G4QINR0 |=  (0x07);
+
+    VADC_G4QINR0 &= ~(1 <<  RF);
+
+    VADC_G4QMR0  |=  (1 <<  TREV);
+}
+
+unsigned int VADC_readResult(void)
+{
+    unsigned int result;
+
+    while((VADC_G4RES1 & (1 << VF)) == 0 );
+    result = (VADC_G4RES1 & ((0xFFFF) << RESULT));
+    return result;
 }
 
 
 IfxCpu_syncEvent g_cpuSyncEvent = 0;
 
+#define PWM_FREQ        6250000
+int num_tones = 8;
+int tones[] = {261, 277, 294, 311, 330, 349, 370, 392};
+volatile int cycle;
 
 int core0_main(void)
 {
@@ -469,53 +702,114 @@ int core0_main(void)
     init_LED();
     init_USonic();
     init_GTM_TOM0_PWM();
+    init_Buzzer();
+    init_VADC();
+    initMotor();
+    unsigned int adcresult;
 
     while(1)
     {
-        usonicTrigger();
+        VADC_startConversion();
+        adcresult = VADC_readResult();
 
-        for (uint8 i = 0; i < 4; i++)
-            for(uint32 j = 0; j < 10000000; j++);
+        if(adcresult >= 3000)
+        {
+          //* 버그 수정 위한 추가 *//
+          GTM_TOM0_CH11_SR1 = 0;
+          GTM_TOM0_CH15_SR1 = 0;
+          //* 버그 수정 위한 추가 *//
 
-        if (range_valid_flag > 0) {
+          GTM_TOM0_CH9_SR1 = (12500*(adcresult-3000))/(4096-3000);
 
-            if( range >= 30 ) // scenario_1
-            {
-                GTM_TOM0_CH15_SR1 = 0;
-                PORT10_OMR |= ((0x01) << PCL3);
-                PORT10_OMR |= ((0x01) << PCL5);
-            }
-            else if( range >= 20 ) // scenario_2 /
-            {
-                GTM_TOM0_CH15_SR1 = 1250-1;
-                PORT10_OMR |= ((0x01) << PCL3);
-                PORT10_OMR |= ((0x01) << PCL5);
-            }
-            else if( range >= 10) // scenario_3
-            {
-                GTM_TOM0_CH15_SR1 = 5250-1;;
-                PORT10_OMR |= ((0x01) << PCL3);
-                PORT10_OMR |= ((0x01) << PCL5);
-            }
-            else // white / scenario_4
-            {
-                GTM_TOM0_CH15_SR1 = 12500-1;
-                PORT10_OMR |= ((0x01) << PCL3);
-                PORT10_OMR |= ((0x01) << PCL5);
-            }
-
+          PORT10_OMR |= ((0x01) << PS3);
+          PORT10_OMR |= ((0x01) << PCL5);
+          PORT10_OMR |= ((0x01) << PCL1);
         }
 
+        else if(adcresult >= 1500)
+        {
+          //* 버그 수정 위한 추가 *//
+          GTM_TOM0_CH11_SR1 = 0;
+          GTM_TOM0_CH15_SR1 = 0;
+          GTM_TOM0_CH9_SR1 = 0;
+          //* 버그 수정 위한 추가 *//
+          PORT10_OMR |= ((0x01) << PS5);
+          PORT10_OMR |= ((0x01) << PCL3);
+          PORT10_OMR |= ((0x01) << PCL1);
+        }
+
+        else
+        {
+          PORT10_OMR |= ((0x01) << PS1);      // Set DIRA to BACK
+          PORT10_OMR |= ((0x01) << PS1);
+          PORT10_OMR |= ((0x01) << PCL5);
+
+            usonicTrigger();
+
+            for (uint8 i = 0; i < 4; i++)
+                for(uint32 j = 0; j < 10000000; j++);
+
+                if (range_valid_flag > 0)
+                {
+                        if( range >= 30 ) // scenario_1
+                        {
+                            GTM_TOM0_CH11_SR1 = 0;
+                            GTM_TOM0_CH15_SR1 = 0;
+                            GTM_TOM0_CH9_SR1 = (12500*(1500-adcresult))/1500;
+
+                        }
+                        else if( range >= 20 ) // scenario_2 /
+                        {
+                            GTM_TOM0_CH11_SR0 = 23946;          //ch11 주파수 for buzzer (낮은 도음)
+                            GTM_TOM0_CH11_SR1 = 23946/2;
+
+                            GTM_TOM0_CH15_SR1 = 1250-1;
+                            GTM_TOM0_CH9_SR1 = (12500*(1500-adcresult))/1500;
+
+                        }
+                        else if( range >= 10) // scenario_3
+                        {
+                            GTM_TOM0_CH11_SR0 = 18939;          //ch11 주파수 for buzzer (솔음)
+                            GTM_TOM0_CH11_SR1 = 18939/2;
+
+                            GTM_TOM0_CH15_SR1 = 5250-1;
+                            GTM_TOM0_CH9_SR1 = 2000;
+
+                        }
+                        else //  scenario_4
+                        {
+                            GTM_TOM0_CH11_SR0 = 15943;          //ch11 주파수 for buzzer (높은 도음)
+                            GTM_TOM0_CH11_SR1 = 15943/2;
+                            GTM_TOM0_CH15_SR1 = 12500-1;        //RGB LED RED 100% DUTY
+
+                            GTM_TOM0_CH9_SR1 =0;
+
+                        }
+                   }
+            }
     }
     return (1);
 }
 
-__interrupt(0x0C) __vector_table(0)
+__interrupt(0x0C) __vector_table(0) // P단 스위치 (D2) 인터럽트
 void ERU1_ISR(void)
 {
+
+    CCU60_IEN ^= (1<< ENT12PM); // CCU60 disable
+
+   // PORT10_OMR |= ((1<<PCL2)|(1<<PS2)); // LED BLUE TOGGLE
+
+    //* 버그 수정 위한 추가 *//
+    GTM_TOM0_CH11_SR1 = 0;
     GTM_TOM0_CH15_SR1 = 0;
+    //* 버그 수정 위한 추가 *//
+
+    PORT02_IOCR0 ^= ((0x11) << PC3); // BUZZER TOGGLE
+   //PORT02_IOCR4 ^= ((0x11) << PC7); // RGB LED RED TOGGLE
+    PORT10_IOCR4 ^= ((0x10) << PC5); // RGB LED GREEN TOGGLE
+    PORT10_IOCR0 ^= ((0x10) << PC3); // LED BLUE TOGGLE
+    PORT10_IOCR0 ^= ((0x10) << PC1); // LED RED TOGGLE
+   PORT02_OMR |= ((1<< PCL7)| (1<<PS7));     // BRAKE TOGGLE
+
 
 }
-
-
-
