@@ -404,15 +404,9 @@ void ERU0_ISR(void)
 #define GTM_TOM0_CH11_SR0             (*(volatile unsigned int*)(GTM_BASE + 0x082C4))
 #define GTM_TOM0_CH11_SR1             (*(volatile unsigned int*)(GTM_BASE + 0x082C8))
 //FOR MOTOR
-<<<<<<< HEAD
 #define GTM_TOM0_CH9_CTRL           (*(volatile unsigned int*)(GTM_BASE + 0x08240))
 #define GTM_TOM0_CH9_SR0            (*(volatile unsigned int*)(GTM_BASE + 0x08244))
 #define GTM_TOM0_CH9_SR1            (*(volatile unsigned int*)(GTM_BASE + 0x08248))
-=======
-#define GTM_TOM0_CH9_CTRL            (*(volatile unsigned int*)(GTM_BASE + 0x082C0))
-#define GTM_TOM0_CH9_SR0             (*(volatile unsigned int*)(GTM_BASE + 0x082C4))
-#define GTM_TOM0_CH9_SR1             (*(volatile unsigned int*)(GTM_BASE + 0x082C8))
->>>>>>> b841e24130f23c6c9e82de71cc58cd64518d9724
 
 
 
@@ -558,7 +552,6 @@ void init_GTM_TOM0_PWM(void)
 
       GTM_TOUTSEL0 &= ~((0x3) << SEL3);                   // TOUT3 : TOM0 channel 11
 
-<<<<<<< HEAD
 
 
       GTM_TOM0_TGC1_GLB_CTRL |= ((0x02) << UPEN_CTRL1);
@@ -573,13 +566,10 @@ void init_GTM_TOM0_PWM(void)
          GTM_TOUTSEL0 &= ~((0x03) << SEL1);
 
 
-=======
->>>>>>> b841e24130f23c6c9e82de71cc58cd64518d9724
       GTM_TOM0_TGC1_GLB_CTRL |= (1 << HOST_TRIG);         // Trigger request signal to update
 
 }
 
-<<<<<<< HEAD
 void initMotor(void)
 {
     PORT10_IOCR0 &= ~(0x1F << PC1);
@@ -591,8 +581,6 @@ void initMotor(void)
     PORT02_IOCR4 |= (0x10 << PC7);  // Set D9 to OUTPUT (BRAKE_A)
 }
 
-=======
->>>>>>> b841e24130f23c6c9e82de71cc58cd64518d9724
 //  VADC Register
 #define VADC_BASE         (0xF0020000)
 #define VADC_CLC          (*(volatile unsigned int*)(VADC_BASE + 0x000))
@@ -716,10 +704,7 @@ int core0_main(void)
     init_GTM_TOM0_PWM();
     init_Buzzer();
     init_VADC();
-<<<<<<< HEAD
     initMotor();
-=======
->>>>>>> b841e24130f23c6c9e82de71cc58cd64518d9724
     unsigned int adcresult;
 
     while(1)
@@ -733,11 +718,8 @@ int core0_main(void)
           GTM_TOM0_CH11_SR1 = 0;
           GTM_TOM0_CH15_SR1 = 0;
           //* 버그 수정 위한 추가 *//
-<<<<<<< HEAD
 
           GTM_TOM0_CH9_SR1 = (12500*(adcresult-3000))/(4096-3000);
-=======
->>>>>>> b841e24130f23c6c9e82de71cc58cd64518d9724
 
           PORT10_OMR |= ((0x01) << PS3);
           PORT10_OMR |= ((0x01) << PCL5);
@@ -749,13 +731,8 @@ int core0_main(void)
           //* 버그 수정 위한 추가 *//
           GTM_TOM0_CH11_SR1 = 0;
           GTM_TOM0_CH15_SR1 = 0;
-<<<<<<< HEAD
           GTM_TOM0_CH9_SR1 = 0;
           //* 버그 수정 위한 추가 *//
-=======
-          //* 버그 수정 위한 추가 *//
-
->>>>>>> b841e24130f23c6c9e82de71cc58cd64518d9724
           PORT10_OMR |= ((0x01) << PS5);
           PORT10_OMR |= ((0x01) << PCL3);
           PORT10_OMR |= ((0x01) << PCL1);
@@ -763,11 +740,7 @@ int core0_main(void)
 
         else
         {
-<<<<<<< HEAD
           PORT10_OMR |= ((0x01) << PS1);      // Set DIRA to BACK
-=======
-
->>>>>>> b841e24130f23c6c9e82de71cc58cd64518d9724
           PORT10_OMR |= ((0x01) << PS1);
           PORT10_OMR |= ((0x01) << PCL5);
 
@@ -781,13 +754,8 @@ int core0_main(void)
                         if( range >= 30 ) // scenario_1
                         {
                             GTM_TOM0_CH11_SR1 = 0;
-<<<<<<< HEAD
                             GTM_TOM0_CH15_SR1 = 0;
                             GTM_TOM0_CH9_SR1 = (12500*(1500-adcresult))/1500;
-=======
-
-                            GTM_TOM0_CH15_SR1 = 0;
->>>>>>> b841e24130f23c6c9e82de71cc58cd64518d9724
 
                         }
                         else if( range >= 20 ) // scenario_2 /
@@ -796,10 +764,7 @@ int core0_main(void)
                             GTM_TOM0_CH11_SR1 = 23946/2;
 
                             GTM_TOM0_CH15_SR1 = 1250-1;
-<<<<<<< HEAD
                             GTM_TOM0_CH9_SR1 = (12500*(1500-adcresult))/1500;
-=======
->>>>>>> b841e24130f23c6c9e82de71cc58cd64518d9724
 
                         }
                         else if( range >= 10) // scenario_3
@@ -807,26 +772,17 @@ int core0_main(void)
                             GTM_TOM0_CH11_SR0 = 18939;          //ch11 주파수 for buzzer (솔음)
                             GTM_TOM0_CH11_SR1 = 18939/2;
 
-<<<<<<< HEAD
                             GTM_TOM0_CH15_SR1 = 5250-1;
                             GTM_TOM0_CH9_SR1 = 2000;
-=======
-                            GTM_TOM0_CH15_SR1 = 5250-1;;
->>>>>>> b841e24130f23c6c9e82de71cc58cd64518d9724
 
                         }
                         else //  scenario_4
                         {
                             GTM_TOM0_CH11_SR0 = 15943;          //ch11 주파수 for buzzer (높은 도음)
                             GTM_TOM0_CH11_SR1 = 15943/2;
-<<<<<<< HEAD
                             GTM_TOM0_CH15_SR1 = 12500-1;        //RGB LED RED 100% DUTY
 
                             GTM_TOM0_CH9_SR1 =0;
-=======
-
-                            GTM_TOM0_CH15_SR1 = 12500-1;        //RGB LED RED 100% DUTY
->>>>>>> b841e24130f23c6c9e82de71cc58cd64518d9724
 
                         }
                    }
@@ -841,11 +797,7 @@ void ERU1_ISR(void)
 
     CCU60_IEN ^= (1<< ENT12PM); // CCU60 disable
 
-<<<<<<< HEAD
    // PORT10_OMR |= ((1<<PCL2)|(1<<PS2)); // LED BLUE TOGGLE
-=======
-    PORT10_OMR |= ((1<<PCL2)|(1<<PS2)); // LED BLUE TOGGLE
->>>>>>> b841e24130f23c6c9e82de71cc58cd64518d9724
 
     //* 버그 수정 위한 추가 *//
     GTM_TOM0_CH11_SR1 = 0;
@@ -853,7 +805,6 @@ void ERU1_ISR(void)
     //* 버그 수정 위한 추가 *//
 
     PORT02_IOCR0 ^= ((0x11) << PC3); // BUZZER TOGGLE
-<<<<<<< HEAD
    //PORT02_IOCR4 ^= ((0x11) << PC7); // RGB LED RED TOGGLE
     PORT10_IOCR4 ^= ((0x10) << PC5); // RGB LED GREEN TOGGLE
     PORT10_IOCR0 ^= ((0x10) << PC3); // LED BLUE TOGGLE
@@ -862,14 +813,3 @@ void ERU1_ISR(void)
 
 
 }
-=======
-    PORT02_IOCR4 ^= ((0x11) << PC7); // RGB LED RED TOGGLE
-    PORT10_IOCR4 ^= ((0x10) << PC5); // RGB LED GREEN TOGGLE
-    PORT10_IOCR0 ^= ((0x10) << PC3); // LED BLUE TOGGLE
-    PORT10_IOCR0 ^= ((0x10) << PC1); // LED RED TOGGLE
-
-
-}
-
-
->>>>>>> b841e24130f23c6c9e82de71cc58cd64518d9724
