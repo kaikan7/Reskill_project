@@ -92,7 +92,7 @@ void init_LED(void)
     PORT10_IOCR4 |= 0x10 << PC5;
     PORT10_IOCR0 |= 0x10 << PC3;
     PORT10_IOCR0 |= 0X10 << PC1;
-    PORT10_IOCR0 |= 0X10 << PC2;
+    PORT10_IOCR0 |= 0X11 << PC2;
 
 }
 
@@ -552,7 +552,7 @@ void init_GTM_TOM0_PWM(void)
 
       GTM_TOUTSEL0 &= ~((0x3) << SEL3);                   // TOUT3 : TOM0 channel 11
 
-
+      //MOTOR
 
       GTM_TOM0_TGC1_GLB_CTRL |= ((0x02) << UPEN_CTRL1);
          GTM_TOM0_TGC1_ENDIS_CTRL |= ((0x02) << ENDIS_CTRL1);
@@ -565,6 +565,32 @@ void init_GTM_TOM0_PWM(void)
          GTM_TOM0_CH9_SR1 = 0;
          GTM_TOUTSEL0 &= ~((0x03) << SEL1);
 
+
+         // LED BLUE
+         GTM_TOM0_TGC0_GLB_CTRL &= ~((0x3) << UPEN_CTRL2);
+                       GTM_TOM0_TGC0_GLB_CTRL |= ((0x2) << UPEN_CTRL2);
+
+                       GTM_TOM0_TGC0_FUPD_CTRL &= ~((0x3) << FUPD_CTRL2);
+                       GTM_TOM0_TGC0_FUPD_CTRL |= ((0x2) << FUPD_CTRL2);
+                       GTM_TOM0_TGC0_FUPD_CTRL &= ~((0x3) << RSTCN0_CH2);
+                       GTM_TOM0_TGC0_FUPD_CTRL |= ((0x2) << RSTCN0_CH2);
+
+                       GTM_TOM0_TGC0_ENDIS_CTRL &= ~((0x3) << ENDIS_CTRL2);
+                       GTM_TOM0_TGC0_ENDIS_CTRL |= ((0x2) << ENDIS_CTRL2);
+                       GTM_TOM0_TGC0_OUTEN_CTRL &= ~((0x3) << OUTEN_CTRL2);
+                       GTM_TOM0_TGC0_OUTEN_CTRL |= ((0x2) << OUTEN_CTRL2);
+
+                GTM_TOM0_CH2_CTRL |= (1<<SL);
+
+                GTM_TOM0_CH2_CTRL &= ~((0x7)<<CLK_SRC_SR);
+                GTM_TOM0_CH2_CTRL |= (1<<CLK_SRC_SR);
+                GTM_TOM0_CH2_SR0 = 12500-1;
+
+                GTM_TOM0_CH2_SR1 = 0;
+
+                GTM_TOUTSEL6 &= ~((0x3)<<SEL8);
+
+                GTM_TOM0_TGC0_GLB_CTRL |= (1<< HOST_TRIG);
 
       GTM_TOM0_TGC1_GLB_CTRL |= (1 << HOST_TRIG);         // Trigger request signal to update
 
@@ -716,7 +742,7 @@ int core0_main(void)
         {
           //* 버그 수정 위한 추가 *//
           GTM_TOM0_CH11_SR1 = 0;
-          GTM_TOM0_CH15_SR1 = 0;
+          GTM_TOM0_CH2_SR1 = 0;
           //* 버그 수정 위한 추가 *//
 
           GTM_TOM0_CH9_SR1 = (12500*(adcresult-3000))/(4096-3000);
@@ -730,7 +756,7 @@ int core0_main(void)
         {
           //* 버그 수정 위한 추가 *//
           GTM_TOM0_CH11_SR1 = 0;
-          GTM_TOM0_CH15_SR1 = 0;
+          GTM_TOM0_CH2_SR1 = 0;
           GTM_TOM0_CH9_SR1 = 0;
           //* 버그 수정 위한 추가 *//
           PORT10_OMR |= ((0x01) << PS5);
@@ -754,7 +780,7 @@ int core0_main(void)
                         if( range >= 30 ) // scenario_1
                         {
                             GTM_TOM0_CH11_SR1 = 0;
-                            GTM_TOM0_CH15_SR1 = 0;
+                            GTM_TOM0_CH2_SR1 =0;
                             GTM_TOM0_CH9_SR1 = (12500*(1500-adcresult))/1500;
 
                         }
@@ -763,7 +789,7 @@ int core0_main(void)
                             GTM_TOM0_CH11_SR0 = 23946;          //ch11 주파수 for buzzer (낮은 도음)
                             GTM_TOM0_CH11_SR1 = 23946/2;
 
-                            GTM_TOM0_CH15_SR1 = 1250-1;
+                            GTM_TOM0_CH2_SR1 = 1250-1;
                             GTM_TOM0_CH9_SR1 = (12500*(1500-adcresult))/1500;
 
                         }
@@ -772,7 +798,7 @@ int core0_main(void)
                             GTM_TOM0_CH11_SR0 = 18939;          //ch11 주파수 for buzzer (솔음)
                             GTM_TOM0_CH11_SR1 = 18939/2;
 
-                            GTM_TOM0_CH15_SR1 = 5250-1;
+                            GTM_TOM0_CH2_SR1 = 5250-1;
                             GTM_TOM0_CH9_SR1 = 2000;
 
                         }
@@ -780,7 +806,7 @@ int core0_main(void)
                         {
                             GTM_TOM0_CH11_SR0 = 15943;          //ch11 주파수 for buzzer (높은 도음)
                             GTM_TOM0_CH11_SR1 = 15943/2;
-                            GTM_TOM0_CH15_SR1 = 12500-1;        //RGB LED RED 100% DUTY
+                            GTM_TOM0_CH2_SR1 = 12500-1;        //RGB LED RED 100% DUTY
 
                             GTM_TOM0_CH9_SR1 =0;
 
@@ -802,13 +828,15 @@ void ERU1_ISR(void)
     //* 버그 수정 위한 추가 *//
     GTM_TOM0_CH11_SR1 = 0;
     GTM_TOM0_CH15_SR1 = 0;
+    GTM_TOM0_CH2_SR1 = 0;
     //* 버그 수정 위한 추가 *//
 
     PORT02_IOCR0 ^= ((0x11) << PC3); // BUZZER TOGGLE
    //PORT02_IOCR4 ^= ((0x11) << PC7); // RGB LED RED TOGGLE
     PORT10_IOCR4 ^= ((0x10) << PC5); // RGB LED GREEN TOGGLE
-    PORT10_IOCR0 ^= ((0x10) << PC3); // LED BLUE TOGGLE
+    PORT10_IOCR0 ^= ((0x10) << PC3); // RGB LED BLUE TOGGLE
     PORT10_IOCR0 ^= ((0x10) << PC1); // LED RED TOGGLE
+    PORT10_IOCR0 ^= ((0x11) << PC2); // LED BLUE TOGGLE
    PORT02_OMR |= ((1<< PCL7)| (1<<PS7));     // BRAKE TOGGLE
 
 
