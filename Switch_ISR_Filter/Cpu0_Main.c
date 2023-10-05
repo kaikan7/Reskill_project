@@ -830,11 +830,22 @@ int core0_main(void)
     return (1);
 }
 
+volatile int cycle;
+
 __interrupt(0x0C) __vector_table(0) // P단 스위치 (D2) 인터럽트
 void ERU1_ISR(void)
 {
 
-    CCU60_IEN ^= (1<< ENT12PM); // CCU60 disable
+       int SwLowStsCnt = 0;
+       for(cycle = 0; cycle < 1000000; cycle++);
+       for(int i = 0; i<1000; i++){
+           if((PORT02_IN & (1 << P0)) == 0)
+               SwLowStsCnt ++;
+       }
+       if(SwLowStsCnt >800 ){
+
+
+       CCU60_IEN ^= (1<< ENT12PM); // CCU60 disable
 
       // PORT10_OMR |= ((1<<PCL2)|(1<<PS2)); // LED BLUE TOGGLE
 
@@ -853,6 +864,6 @@ void ERU1_ISR(void)
        PORT10_IOCR0 ^= ((0x11) << PC2); // LED BLUE TOGGLE
        PORT02_OMR |= ((1<< PCL7)| (1<<PS7));     // BRAKE TOGGLE
 
-
+       }
 
 }
